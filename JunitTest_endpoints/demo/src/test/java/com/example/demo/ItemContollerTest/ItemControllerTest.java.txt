@@ -1,0 +1,63 @@
+package com.example.demo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest
+class ItemControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void testGetEndpoint() throws Exception {
+        mockMvc.perform(get("/api/items"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{\"id\":1,\"name\":\"Item1\"},{\"id\":2,\"name\":\"Item2\"}]"));
+    }
+
+    @Test
+    void testPostEndpoint() throws Exception {
+        String newItem = "{\"name\":\"NewItem\"}";
+        
+        mockMvc.perform(post("/api/items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(newItem))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"));
+    }
+
+    @Test
+    void testPutEndpoint() throws Exception {
+        String updatedItem = "{\"name\":\"UpdatedItem\"}";
+        
+        mockMvc.perform(put("/api/items/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(updatedItem))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Item updated successfully"));
+    }
+
+    @Test
+    void testDeleteEndpoint() throws Exception {
+        mockMvc.perform(delete("/api/items/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testInvalidInput() throws Exception {
+        String invalidItem = "{\"invalidField\":\"InvalidValue\"}";
+        
+        mockMvc.perform(post("/api/items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidItem))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid input"));
+    }
+}
